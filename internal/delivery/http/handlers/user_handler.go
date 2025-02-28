@@ -1,6 +1,7 @@
-package http
+package handlers
 
 import (
+	http2 "api/internal/delivery/http"
 	"api/internal/domain"
 	"api/internal/usecase"
 	"encoding/json"
@@ -29,7 +30,7 @@ type GetUserRequest struct {
 // GetUser обрабатывает получение пользователя по ID.
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	errorContainer := ErrorResponse{}
+	errorContainer := http2.ErrorResponse{}
 
 	request := &GetUserRequest{
 		ID: r.URL.Query().Get("id"),
@@ -47,7 +48,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JsonResponse(w, http.StatusOK, user)
+	http2.JsonResponse(w, http.StatusOK, user)
 }
 
 type ListUserRequest struct {
@@ -58,7 +59,7 @@ type ListUserRequest struct {
 // List возвращает список всех пользователей.
 func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	errorContainer := ErrorResponse{}
+	errorContainer := http2.ErrorResponse{}
 
 	request := domain.QueryOptions{}
 
@@ -68,7 +69,7 @@ func (h *UserHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JsonResponse(w, http.StatusOK, users)
+	http2.JsonResponse(w, http.StatusOK, users)
 }
 
 // CreateUserRequest представляет входящие данные для создания пользователя.
@@ -79,7 +80,7 @@ type CreateUserRequest struct {
 // CreateUser обрабатывает создание нового пользователя.
 func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	errorContainer := ErrorResponse{}
+	errorContainer := http2.ErrorResponse{}
 
 	var req CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,7 +111,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		ID: id,
 	}
 
-	JsonResponse(w, http.StatusCreated, response)
+	http2.JsonResponse(w, http.StatusCreated, response)
 }
 
 type DeleteUserRequest struct {
@@ -120,7 +121,7 @@ type DeleteUserRequest struct {
 // DeleteUser обрабатывает удаление пользователя по ID.
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
-	errorContainer := ErrorResponse{}
+	errorContainer := http2.ErrorResponse{}
 
 	request := DeleteUserRequest{
 		ID: r.URL.Query().Get("id"),
@@ -137,5 +138,5 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	JsonResponse(w, http.StatusNoContent, nil)
+	http2.JsonResponse(w, http.StatusNoContent, nil)
 }

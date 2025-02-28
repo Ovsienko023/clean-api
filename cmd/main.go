@@ -1,19 +1,31 @@
 package main
 
 import (
+	httpHandlers "api/internal/delivery/http/handlers"
+	"api/internal/delivery/http/middlewares"
+	"api/internal/logger"
 	"api/internal/repository/memory"
 	"api/internal/usecase"
-	"log"
+	"log/slog"
 	"net/http"
-
-	httpDelivery "api/internal/delivery/http"
 )
 
 func main() {
+	logConfig := logger.Config{
+		Level:      slog.LevelInfo,
+		OutputPath: logger.OutputPathStdOut,
+		Format:     logger.FormatText,
+	}
+
+	lgr, err := logger.New(logConfig)
+	if err != nil {
+		panic(err)
+	}
+
 	// User
 	repo := memory.NewUserRepositoryMemory()
 	userUC := usecase.NewUserUseCase(repo)
-	userHandler := httpDelivery.NewUserHandler(userUC)
+	userHandler := httpHandlers.NewUserHandler(userUC)
 
 	// Настраиваем маршруты.
 	mux := http.NewServeMux()
@@ -23,8 +35,11 @@ func main() {
 	mux.HandleFunc("POST /user/create", userHandler.CreateUser)
 	mux.HandleFunc("DELETE /user/delete", userHandler.DeleteUser)
 
-	log.Println("Server started on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		log.Fatal(err)
+	loggedMux := middlewares.Logging(mux, lgr)
+
+	lgr.Info("Server started on :8080")
+	if err = http.ListenAndServe(":8080", loggedMux); err != nil {
+		lgr.Error("Fail to run server: ", err.Error())
+		panic(err)
 	}
 }
