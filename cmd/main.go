@@ -6,8 +6,12 @@ import (
 	"api/internal/logger"
 	"api/internal/repository/memory"
 	"api/internal/usecase"
+	"context"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"log"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -22,9 +26,25 @@ func main() {
 		panic(err)
 	}
 
+	// Создаем контекст с таймаутом для подключения к БД.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// TODO: Вынести в конфиг
+	connStr := "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+
+	// Инициализация пула соединений.
+	pool, err := pgxpool.New(ctx, connStr)
+	if err != nil {
+		log.Fatalf("Ошибка подключения к БД: %v", err)
+	}
+	defer pool.Close()
+
 	// User
-	repo := memory.NewUserRepositoryMemory()
-	userUC := usecase.NewUserUseCase(repo)
+
+	//userRepo := postgres.NewPostgresUserRepository(pool)
+	userRepo := memory.NewUserRepositoryMemory()
+	userUC := usecase.NewUserUseCase(userRepo)
 	userHandler := httpHandlers.NewUserHandler(userUC)
 
 	// Настраиваем маршруты.
