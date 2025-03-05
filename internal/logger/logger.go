@@ -12,7 +12,6 @@ const (
 	OutputPathStdOut string = "stdout"
 )
 
-// Config задаёт настройки логгера.
 type Config struct {
 	Level      slog.Level // Уровень логирования
 	OutputPath string     // Путь к файлу для логирования (если пусто – вывод в stdout)
@@ -37,7 +36,6 @@ func New(cfg Config) (*slog.Logger, error) {
 		Level: cfg.Level,
 	}
 
-	// Выбор формата логирования
 	switch cfg.Format {
 	case FormatJson:
 		handler = slog.NewJSONHandler(output, opts)

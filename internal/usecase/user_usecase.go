@@ -9,7 +9,6 @@ type UserUseCase struct {
 	userRepo domain.UserRepository
 }
 
-// NewUserUseCase создаёт новый экземпляр UserUseCase.
 func NewUserUseCase(repo domain.UserRepository) *UserUseCase {
 	return &UserUseCase{
 		userRepo: repo,

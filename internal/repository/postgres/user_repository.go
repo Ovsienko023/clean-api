@@ -1,4 +1,3 @@
-// repository/postgres/user_repository.go
 package postgres
 
 import (
@@ -11,12 +10,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// PostgresUserRepository реализует интерфейс domain.UserRepository для работы с PostgreSQL.
 type PostgresUserRepository struct {
 	pool *pgxpool.Pool
 }
 
-// NewPostgresUserRepository создаёт новый репозиторий, используя пул подключений pgxpool.
 func NewPostgresUserRepository(pool *pgxpool.Pool) *PostgresUserRepository {
 	return &PostgresUserRepository{pool: pool}
 }
@@ -41,7 +38,6 @@ func (r *PostgresUserRepository) Get(ctx context.Context, id string) (*domain.Us
 }
 
 // Search возвращает список пользователей.
-// Пример реализации: здесь queryOpts пока не используется, но в дальнейшем можно динамически строить запрос.
 func (r *PostgresUserRepository) Search(ctx context.Context, queryOpts domain.QueryOptions) ([]*domain.User, error) {
 	const sql = `
 		SELECT id, name 

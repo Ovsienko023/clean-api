@@ -26,14 +26,12 @@ func main() {
 		panic(err)
 	}
 
-	// Создаем контекст с таймаутом для подключения к БД.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	// TODO: Вынести в конфиг
 	connStr := "postgres://user:password@localhost:5432/dbname?sslmode=disable"
 
-	// Инициализация пула соединений.
 	pool, err := pgxpool.New(ctx, connStr)
 	if err != nil {
 		log.Fatalf("Ошибка подключения к БД: %v", err)
@@ -47,7 +45,6 @@ func main() {
 	userUC := usecase.NewUserUseCase(userRepo)
 	userHandler := httpHandlers.NewUserHandler(userUC)
 
-	// Настраиваем маршруты.
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /user/get", userHandler.GetUser)

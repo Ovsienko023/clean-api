@@ -14,7 +14,7 @@ func WithTransaction(ctx context.Context, pool *pgxpool.Pool, fn func(tx pgx.Tx)
 	if err != nil {
 		return err
 	}
-	// Обеспечиваем корректный rollback в случае паники.
+
 	defer func() {
 		if p := recover(); p != nil {
 			tx.Rollback(ctx)

@@ -8,7 +8,6 @@ import (
 	"sync"
 )
 
-// UserRepositoryMemory реализует интерфейс UserRepository с хранением в памяти.
 type UserRepositoryMemory struct {
 	mu    sync.RWMutex
 	users map[string]*domain.User
@@ -16,7 +15,6 @@ type UserRepositoryMemory struct {
 
 var _ domain.UserRepository = &UserRepositoryMemory{}
 
-// NewUserRepositoryMemory создаёт новый репозиторий в памяти.
 func NewUserRepositoryMemory() *UserRepositoryMemory {
 	return &UserRepositoryMemory{
 		users: make(map[string]*domain.User),
