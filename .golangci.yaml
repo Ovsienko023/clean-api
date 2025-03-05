@@ -1,0 +1,373 @@
+# Options for analysis running.
+run:
+  # The default concurrency value is the number of available CPU.
+  concurrency: 0
+  # Timeout for analysis, e.g. 30s, 5m.
+  # Default: 1m
+  timeout: 15m
+  # Exit code when at least one issue was found.
+  # Default: 1
+  issues-exit-code: 1
+  # Include test files or not.
+  # Default: true
+  tests: false
+  # List of build tags, all linters use it.
+  # Default: [].
+  build-tags: [ ]
+  # If set we pass it to "go list -mod={option}". From "go help modules":
+  # If invoked with -mod=readonly, the go command is disallowed from the implicit
+  # automatic updating of go.mod described above. Instead, it fails when any changes
+  # to go.mod are needed. This setting is most useful to check that go.mod does
+  # not need updates, such as in a continuous integration and testing system.
+  # If invoked with -mod=vendor, the go command assumes that the vendor
+  # directory holds the correct copies of dependencies and ignores
+  # the dependency descriptions in go.mod.
+  #
+  # Allowed values: readonly|vendor|mod
+  # By default, it isn't set.
+  modules-download-mode: readonly
+  # Allow multiple parallel golangci-lint instances running.
+  # If false (default) - golangci-lint acquires file lock on start.
+  allow-parallel-runners: true
+
+  # Минимально поддерживаемая версия go.
+  # Mainly related to generics support in go1.18.
+  # Default: use Go version from the go.mod file, fallback on the env var `GOVERSION`, fallback on 1.17
+  go: '1.24'
+
+# output configuration options
+output:
+  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
+  #
+  # Multiple can be specified by separating them by comma, output can be provided
+  # for each of them by separating format name and path by colon symbol.
+  # Output path can be either `stdout`, `stderr` or path to the file to write to.
+  # Example: "checkstyle:report.json,colored-line-number"
+  #
+  # Default: colored-line-number
+  formats:
+    - format: colored-line-number
+      path: stdout
+    - format: code-climate
+      path: code-quality-report.json
+
+  # Print lines of code with issue.
+  # Default: true
+  print-issued-lines: false
+  # Print linter name in the end of issue text.
+  # Default: true
+  print-linter-name: true
+  # Make issues output unique by line.
+  # Default: true
+  uniq-by-line: true
+  # Add a prefix to the output file references.
+  # Default is no prefix.
+  path-prefix: ""
+  # Sort results by: filepath, line and column.
+  sort-results: true
+
+linters-settings:
+  #complexity:
+  funlen:
+    # Проверяет длину функций
+    lines: 80 # Максимальное кол-во строк функции
+    statements: 40 # Максимальное кол-во выражений
+
+  gocognit:
+    # Проверяет цикломатическую сложность
+    # Конфигурация https://golangci-lint.run/usage/linters/#gocyclo
+    # Репозиторий https://github.com/uudashr/gocognit
+    min-complexity: 20 # Максимально допустимая сложность
+
+  gosec:
+    # Проверяет отсутствие проблем безопасности
+    # Конфигурация https://golangci-lint.run/usage/linters/#gosec
+    # Репозиторий https://github.com/securego/gosec
+    exclude-generated: false
+    excludes:
+      - G601 # false-positive начиная с Go 1.22
+
+  #code_style:
+  goconst:
+    # ищет переменные, которые можно вынести в константы.
+    # Конфигурация https://golangci-lint.run/usage/linters/#goconst
+    # Репозиторий https://github.com/jgautheron/goconst
+    min-len: 2
+    min-occurrences: 2
+    ignore-tests: true
+    match-constant: true
+
+  tagliatelle:
+    # Проверяет теги на использование нужного стиля
+    # Конфигурация https://golangci-lint.run/usage/linters/#tagliatelle
+    # Репозитория https://github.com/ldez/tagliatelle
+    case:
+      # Use the struct field name to check the name of the struct tag.
+      use-field-name: true
+      rules:
+        # Any struct tag type can be used.
+        # Support string case: `camel`, `pascal`, `kebab`, `snake`, `upperSnake`,
+        # `goCamel`, `goPascal`, `goKebab`, `goSnake`, `upper`, `lower`, `header`
+        json: camel
+        yaml: camel
+        xml: camel
+        toml: camel
+        env: upperSnake
+        envconfig: upperSnake
+
+  varnamelen:
+    # Проверяет отсутствие слишком коротких имен переменных.
+    # Конфигурация https://golangci-lint.run/usage/linters/#varnamelen
+    # Репозиторий https://github.com/blizzy78/varnamelen
+    max-distance: 8 # минимальное кол-во строк скоупа при которой происходит проверка
+    min-name-length: 3 # минимальная длина названия переменной
+    check-receiver: false # не проверяет method receiver
+    check-return: true # проверяет название возвращаемого из фукнции значения
+    check-type-param: true # проверяет параметры типа
+    ignore-type-assert-ok: true # Пропускает _,ok переменную при val.(type)
+    ignore-map-index-ok: true # Пропускает _,ok переменную при map[index]
+    ignore-chan-recv-ok: true # Пропускает _,ok переменную при <- channel
+
+    ignore-names: # Пропускает следующие имена
+      - T # generics
+      - c # для передачи (c *Container, c *Core) в параметрах
+      - r # для передачи запроса (r *SomethingRequest)
+      - id
+      - ip
+      - ok
+      - mq
+      - dn
+      - tx
+      - fn
+      - app
+      - err
+      - job
+      - key
+      - log
+      - now
+      - tcp
+
+    ignore-decls: # игнорирует следующие определения
+      - c *Container *Core
+      - t testing.T
+      - T any
+      - w http.ResponseWriter
+      - r *http.Request
+      - i int
+      - v interface{}
+      - wg sync.WaitGroup
+      - wg *sync.WaitGroup
+      - ctx context.Context
+      - cmd *cobra.Command
+      - img image.Image
+      - mux *runtime.ServeMux
+      - to time.Time
+
+  wsl:
+    # Проверяет наличие/отсутствие пустых строк между блоками.
+    # Подробная конфигурация https://github.com/bombsimon/wsl/blob/master/doc/configuration.md
+
+    strict-append: true # требует чтобы блоки с append были разделены по группам
+    allow-assign-and-call: true # разрешает не разделять присваивание и вызов метода
+    allow-assign-and-anything: false # требует чтобы после присваивания был пробел (исключение вызов метода)
+    allow-multiline-assign: true # разрешает не разделять группы присваиваний
+    allow-separated-leading-comment: true # позволяет иметь отдельные комментарии в начале блока
+    force-case-trailing-whitespace: 2 # требует чтобы после блока case, если в нем >= 2 строк, был пробел
+    allow-cuddle-declarations: false # требует чтобы блоки определения были сгруппированы скобками
+    allow-trailing-comment: true # разрешает комментарии в конце блока
+    force-err-cuddling: false # разрешает отделять проверку ошибок от вызова функции/метода
+
+  nolintlint:
+    # Проверяет использование директивы //nolint.
+    # Конфигурация https://golangci-lint.run/usage/linters/#nolintlint
+    # Репозиторий https://github.com/golangci/golangci-lint/tree/master/pkg/golinters/nolintlint
+
+    allow-unused: false # запрещает иметь неиспользуемые директивы
+    require-specific: false # требует чтобы был указан линтер который выключается
+    require-explanation: true # требует объяснений использования диррективы
+    allow-no-explanation: [ ] # список исключений
+
+  decorder:
+    # Required order of `type`, `const`, `var` and `func` declarations inside a file.
+    # Default: types before constants before variables before functions.
+    dec-order:
+      - type
+      - const
+      - var
+      - func
+
+    # If true, underscore vars (vars with "_" as the name) will be ignored at all checks
+    # Default: false (underscore vars are not ignored)
+    ignore-underscore-vars: true
+    # If true, order of declarations is not checked at all.
+    # Default: true (disabled)
+    disable-dec-order-check: true
+    # If true, `init` func can be anywhere in file (does not have to be declared before all other functions).
+    # Default: true (disabled)
+    disable-init-func-first-check: false
+    # If true, multiple global `type`, `const` and `var` declarations are allowed.
+    # Default: true (disabled)
+    disable-dec-num-check: true
+    # If true, type declarations will be ignored for dec num check
+    # Default: false (type statements are not ignored)
+    disable-type-dec-num-check: false
+    # If true, const declarations will be ignored for dec num check
+    # Default: false (const statements are not ignored)
+    disable-const-dec-num-check: false
+    # If true, var declarations will be ignored for dec num check
+    # Default: false (var statements are not ignored)
+    disable-var-dec-num-check: false
+
+  dogsled:
+    # Checks assignments with too many blank identifiers.
+    # Default: 2
+    max-blank-identifiers: 3
+
+  # Code clone detection
+  dupl:
+    # Tokens count to trigger issue.
+    # Default: 150
+    threshold: 150
+
+  # Checking for unchecked errors in Go code
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    # Such cases aren't reported by default.
+    # Default: false
+    check-type-assertions: true
+    # report about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`.
+    # Such cases aren't reported by default.
+    # Default: false
+    check-blank: true
+    # To disable the errcheck built-in exclude list.
+    # See `-excludeonly` option in https://github.com/kisielk/errcheck#excluding-functions for details.
+    # Default: false
+    disable-default-exclusions: false
+
+  gci:
+    # Skip generated files.
+    # Default: true
+    skip-generated: true
+
+  gocritic:
+    # Disable all checks.
+    # Default: false
+    disable-all: true
+    # https://go-critic.com/overview
+    enabled-checks:
+      - appendAssign
+      - appendCombine
+      - badSorting
+      - boolExprSimplify
+      - builtinShadow
+      - builtinShadowDecl
+      - captLocal
+      - caseOrder
+      - commentFormatting
+      - commentedOutCode
+      - commentedOutImport
+      - defaultCaseOrder
+      - deferInLoop
+      - deferUnlambda
+      - dupArg
+      - dupBranchBody
+      - dupCase
+      - dupImport
+      - elseif
+      - emptyDecl
+      - emptyFallthrough
+      - exitAfterDefer
+      - externalErrorReassign
+      - filepathJoin
+      - ifElseChain
+      - importShadow
+      - methodExprCall
+      - nestingReduce
+      - newDeref
+      - nilValReturn
+      - offBy1
+      - paramTypeCombine
+      - preferFilepathJoin
+      - rangeExprCopy
+      - regexpMust
+      - singleCaseSwitch
+      - sloppyLen
+      - sloppyTypeAssert
+      - stringsCompare
+      - switchTrue
+      - syncMapLoadAndDelete
+      - timeExprSimplify
+      - todoCommentWithoutDetail
+      - tooManyResultsChecker
+      - truncateCmp
+      - typeAssertChain
+      - typeDefFirst
+      - typeSwitchVar
+      - typeUnparen
+      - uncheckedInlineErr
+      - underef
+      - unlabelStmt
+      - unlambda
+      - unnecessaryBlock
+      - unnecessaryDefer
+      - unslice
+      - valSwap
+      - weakCond
+      - whyNoLint
+      - wrapperFunc
+      - yodaStyleExpr
+
+  misspell:
+    # Correct spellings using locale preferences for US or UK.
+    # Setting locale to US will correct the British spelling of 'colour' to 'color'.
+    # Default is to use a neutral variety of English.
+    locale: US
+
+linters:
+  enable:
+    # Complexity:
+    - gocognit # проверяет когнитивную сложность кода
+    - funlen # проверяет длину функций
+    - nestif # проверяет многовложенные if-условия (5+)
+
+    # Bugs:
+    - nilerr # проверяет возвращаемые ошибки https://github.com/gostaticanalysis/nilerr
+    - gosec # проверяет отсутствие проблем безопасности
+    - mnd # проверяет наличие магических чисел в коде
+
+    # CodeStyle:
+    - goconst # ищет переменные, которые можно вынести в константы.
+    - tagliatelle # проверяет теги на использование нужного стиля
+    - varnamelen # проверяет отсутствие слишком коротких имен переменных
+    - wastedassign # проверяет отсутствие неиспользуемых присваиваний https://github.com/sanposhiho/wastedassign
+    - wsl # проверяет наличие/отсутствие пустых строк между блоками.
+    # - gci # проверяет порядок импортов.
+    - misspell # проверяет корректность написания английских слов
+    - nakedret # проверяет, что функции с naked return не слишком длинные (30 строк)
+    - nlreturn # проверяет наличие пустой строки перед return
+
+    # Other:
+    - nolintlint # проверяет использование директивы //nolint
+    - unused # проверяет неиспользуемые объекты https://github.com/dominikh/go-tools/tree/master/unused
+    - decorder # проверяет порядок объявления типов, констант, переменных и функций
+    - dogsled # проверяет присваивания с большим количеством "пустых" переменных
+    - dupl # проверяет дублируемость кода
+    - errcheck # контролирует проверку ошибок в коде
+    - gocritic # проводит диагностику на баги, производительность и стиль кода
+
+  fast: false
+
+issues:
+  # Which dirs to skip: issues from them won't be reported.
+  # Can use regexp here: `generated.*`, regexp is applied on full path.
+  # Default value is empty list,
+  # but default dirs are skipped independently of this option's value (see skip-dirs-use-default).
+  # "/" will be replaced by current OS file path separator to properly work on Windows.
+  exclude-dirs:
+    - tests
+
+  # Enables skipping of directories:
+  # - vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
+  # Default: true
+  exclude-dirs-use-default: false
+  fix: false

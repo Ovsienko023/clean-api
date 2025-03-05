@@ -1,7 +1,7 @@
 BINARY_NAME := app
 BUILD_DIR := bin
 
-.PHONY: all build run test clean
+.PHONY: all build run test clean lint
 
 all: build
 
@@ -21,3 +21,6 @@ test:
 clean:
 	@echo "Clean..."
 	rm -rf $(BUILD_DIR)
+
+lint:
+	golangci-lint run
